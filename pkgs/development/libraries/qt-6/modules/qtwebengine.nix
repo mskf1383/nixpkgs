@@ -4,6 +4,7 @@
 , qtpositioning
 , qtwebsockets
 , buildPackages
+, clang_14
 , bison
 , coreutils
 , flex
@@ -67,6 +68,31 @@
 , mesa
 , xkeyboard_config
 , enableProprietaryCodecs ? true
+  # darwin
+, bootstrap_cmds
+, cctools
+, libpm
+, libunwind
+, sandbox
+, xcbuild
+, xnu
+, AGL
+, AVFoundation
+, Cocoa
+, CoreLocation
+, CoreML
+, ForceFeedback
+, GameController
+, ImageCaptureCore
+, LocalAuthentication
+, MediaAccessibility
+, MediaPlayer
+, MetalKit
+, Network
+, Quartz
+, ReplayKit
+, SecurityInterface
+, Vision
 }:
 
 qtModule {
@@ -84,6 +110,8 @@ qtModule {
     which
     gn
     nodejs
+  ] ++ lib.optionals stdenv.isDarwin [
+    clang_14
   ];
   doCheck = true;
   outputs = [ "out" "dev" ];
@@ -93,6 +121,12 @@ qtModule {
   # ninja builds some components with -Wno-format,
   # which cannot be set at the same time as -Wformat-security
   hardeningDisable = [ "format" ];
+
+  patches = [
+    ../patches/qtwebengine-darwin-no-extensions.patch
+    # requires macOS 12.0+
+    ../patches/qtwebengine-darwin-no-low-latency.patch
+  ];
 
   postPatch = ''
     # Patch Chromium build tools
@@ -109,7 +143,7 @@ qtModule {
 
     substituteInPlace cmake/Functions.cmake \
       --replace "/bin/bash" "${buildPackages.bash}/bin/bash"
-
+  '' + lib.optionalString (!stdenv.isDarwin) ''
     sed -i -e '/lib_loader.*Load/s!"\(libudev\.so\)!"${lib.getLib systemd}/lib/\1!' \
       src/3rdparty/chromium/device/udev_linux/udev?_loader.cc
 
@@ -124,6 +158,17 @@ qtModule {
       --replace "QLibraryInfo::path(QLibraryInfo::DataPath)" "\"$out\"" \
       --replace "QLibraryInfo::path(QLibraryInfo::TranslationsPath)" "\"$out/translations\"" \
       --replace "QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath)" "\"$out/libexec\""
+  '' + lib.optionalString stdenv.isDarwin ''
+    substituteInPlace configure.cmake \
+      --replace "AppleClang" "Clang"
+    substituteInPlace cmake/Functions.cmake \
+      --replace "/usr/bin/xcrun" "${xcbuild}/bin/xcrun"
+    substituteInPlace src/3rdparty/chromium/build/config/mac/BUILD.gn \
+      --replace "\$mac_deployment_target" "${stdenv.targetPlatform.darwinSdkVersion}"
+    substituteInPlace src/gn/CMakeLists.txt \
+      --replace "REALPATH" "ABSOLUTE"
+    substituteInPlace src/3rdparty/chromium/third_party/crashpad/crashpad/util/BUILD.gn \
+      --replace "\$sysroot/usr" "${xnu}"
   '';
 
   cmakeFlags = [
@@ -143,9 +188,12 @@ qtModule {
     # android only. https://bugreports.qt.io/browse/QTBUG-100293
     # "-DQT_FEATURE_webengine_native_spellchecker=ON"
     "-DQT_FEATURE_webengine_sanitizer=ON"
-    "-DQT_FEATURE_webengine_webrtc_pipewire=ON"
     "-DQT_FEATURE_webengine_kerberos=ON"
-  ] ++ lib.optional enableProprietaryCodecs "-DQT_FEATURE_webengine_proprietary_codecs=ON";
+  ] ++ lib.optionals stdenv.isLinux [
+    "-DQT_FEATURE_webengine_webrtc_pipewire=ON"
+  ] ++ lib.optionals enableProprietaryCodecs [
+    "-DQT_FEATURE_webengine_proprietary_codecs=ON"
+  ];
 
   propagatedBuildInputs = [
     # Image formats
@@ -174,7 +222,7 @@ qtModule {
 
     libevent
     ffmpeg
-
+  ] ++ lib.optionals (!stdenv.isDarwin) [
     dbus
     zlib
     minizip
@@ -214,10 +262,36 @@ qtModule {
 
     libkrb5
     mesa
+  ] ++ lib.optionals stdenv.isDarwin [
+    AGL
+    AVFoundation
+    Cocoa
+    CoreLocation
+    CoreML
+    ForceFeedback
+    GameController
+    ImageCaptureCore
+    LocalAuthentication
+    MediaAccessibility
+    MediaPlayer
+    MetalKit
+    Network
+    Quartz
+    ReplayKit
+    SecurityInterface
+    Vision
   ];
 
   buildInputs = [
     cups
+  ] ++ lib.optionals stdenv.isDarwin [
+    bootstrap_cmds
+    cctools
+    libpm
+    libunwind
+    openbsm
+    sandbox
+    xcbuild
   ];
 
   requiredSystemFeatures = [ "big-parallel" ];
@@ -234,7 +308,8 @@ qtModule {
 
   meta = with lib; {
     description = "A web engine based on the Chromium web browser";
-    platforms = platforms.linux;
+    platforms = platforms.unix;
+    broken = stdenv.isDarwin && stdenv.isx86_64;
     # This build takes a long time; particularly on slow architectures
     # 1 hour on 32x3.6GHz -> maybe 12 hours on 4x2.4GHz
     timeout = 24 * 3600;

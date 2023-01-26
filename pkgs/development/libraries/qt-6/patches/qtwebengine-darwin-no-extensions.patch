@@ -1,0 +1,34 @@
+diff --git a/src/core/common/extensions/extensions_api_provider_qt.cpp b/src/core/common/extensions/extensions_api_provider_qt.cpp
+index 1c8e897..5c4f20b 100644
+--- a/src/core/common/extensions/extensions_api_provider_qt.cpp
++++ b/src/core/common/extensions/extensions_api_provider_qt.cpp
+@@ -19,9 +19,9 @@
+ #include "extensions/grit/extensions_resources.h"
+ #include "qtwebengine/common/extensions/api/generated_schemas.h"
+ 
+-#include "qt_api_features.h"
++//#include "qt_api_features.h"
+ //#include "qt_behavior_features.h"
+-#include "qt_permission_features.h"
++//#include "qt_permission_features.h"
+ //#include "qt_manifest_features.h"
+ 
+ 
+@@ -37,7 +37,7 @@ void ExtensionsAPIProviderQt::RegisterManifestHandlers()
+ 
+ void ExtensionsAPIProviderQt::AddAPIFeatures(FeatureProvider *provider)
+ {
+-    AddQtAPIFeatures(provider);
++    //AddQtAPIFeatures(provider);
+ }
+ 
+ void ExtensionsAPIProviderQt::AddAPIJSONSources(JSONFeatureProviderSource *json_source)
+@@ -47,7 +47,7 @@ void ExtensionsAPIProviderQt::AddAPIJSONSources(JSONFeatureProviderSource *json_
+ 
+ void ExtensionsAPIProviderQt::AddPermissionFeatures(FeatureProvider *provider)
+ {
+-    AddQtPermissionFeatures(provider);
++    //AddQtPermissionFeatures(provider);
+ }
+ 
+ bool ExtensionsAPIProviderQt::IsAPISchemaGenerated(const std::string &name)

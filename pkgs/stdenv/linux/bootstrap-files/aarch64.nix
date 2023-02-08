@@ -1,11 +1,11 @@
 {
   busybox = import <nix/fetchurl.nix> {
-    url = "http://tarballs.nixos.org/stdenv-linux/aarch64/c7c997a0662bf88264db52cbc41e67884eb7a1ff/busybox";
-    sha256 = "sha256-4EN2vLvXUkelZZR2eKaAQA5kCEuHNvRZN6dcohxVY+c=";
+    url = "https://github.com/wegank/bootstrap-files/raw/d36b7533c4071515d412c2bf09cc3f1619dc2299/aarch64/busybox";
     executable = true;
+    hash = "sha256-0MuIeQlBUaeisqoFSu8y+8oB6K4ZG5Lhq8RcS9JqkFQ=";
   };
   bootstrapTools = import <nix/fetchurl.nix> {
-    url = "http://tarballs.nixos.org/stdenv-linux/aarch64/c7c997a0662bf88264db52cbc41e67884eb7a1ff/bootstrap-tools.tar.xz";
-    sha256 = "sha256-AjOvmaW8JFVZaBSRUMKufr9kJozg/tsZr7PvUEBQyi4=";
+    url = "https://github.com/wegank/bootstrap-files/raw/d36b7533c4071515d412c2bf09cc3f1619dc2299/aarch64/bootstrap-tools.tar.xz";
+    hash = "sha256-aJvtsWeuQHbb14BGZ2EiOKzjQn46h3x3duuPEawG0eE=";
   };
 }

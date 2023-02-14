@@ -6,7 +6,6 @@
 , alsa-lib
 , ncurses5
 , xorg
-, isNixOS ? false
 , autoPatchelfHook
 }:
 

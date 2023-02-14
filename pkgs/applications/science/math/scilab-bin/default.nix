@@ -3,11 +3,11 @@
 , fetchurl
 , makeWrapper
 , undmg
-, isNixOS ? false
-, autoPatchelfHook
 , alsa-lib
 , ncurses5
 , xorg
+, isNixOS ? false
+, autoPatchelfHook
 }:
 
 let

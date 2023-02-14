@@ -62,7 +62,7 @@ let
   linux = stdenv.mkDerivation rec {
     inherit pname version src meta;
 
-    nativeBuildInputs = lib.optionals isNixOS [
+    nativeBuildInputs = [
       autoPatchelfHook
     ];
 
